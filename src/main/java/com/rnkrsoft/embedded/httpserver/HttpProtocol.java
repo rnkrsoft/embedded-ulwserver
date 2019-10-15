@@ -42,7 +42,7 @@ public abstract class HttpProtocol {
                 return;
             }
         } while (startLine == null ? false : startLine.equals(""));
-        log.debug("startLine:{}", startLine);
+        log.debug("head:{}", startLine);
 
         //此时startLine 为GET /images/logo.gif HTTP/1.1
         //如果构建出的请求对象，读取信息为空，则关闭连接
@@ -53,7 +53,7 @@ public abstract class HttpProtocol {
         //如果读取信息无空格，则为无效请求
         int space = startLine.indexOf(' ');
         if (space == -1) {
-            error(HttpServletResponse.SC_NOT_FOUND, "Bad request");
+            writeError(HttpServletResponse.SC_NOT_FOUND, "Bad request");
             return;
         }
         //如果字符串开始到第一个空格位置，则为GET
@@ -62,7 +62,7 @@ public abstract class HttpProtocol {
         //如果读取第一个空格之后的信息无空格，则为无效请求
         space = startLine.indexOf(' ', start);
         if (space == -1) {
-            error(HttpServletResponse.SC_NOT_FOUND, "Bad request");
+            writeError(HttpServletResponse.SC_NOT_FOUND, "Bad request");
             return;
         }
         //uri则为第一个空格和第二个空格之间的内容，则为/images/logo.gif
@@ -186,19 +186,51 @@ public abstract class HttpProtocol {
      * @param code          应答代码
      * @param contentLength 内容长度
      */
-    public abstract void responseHeader(int code, int contentLength, List<String> setCookies) throws IOException;
-    public abstract void responseHeader(int code, int contentLength) throws IOException;
+    public abstract void writeResponseHeader(int code, int contentLength, List<String> setCookies) throws IOException;
 
     /**
-     * 清理连接器，用于重复使用
+     * 写入应答头信息到输出流
+     * @param code          应答代码
+     * @param contentLength 内容长度
+     * @throws IOException 有可能发生写入异常，客户端主动关闭
      */
-    public abstract void clear();
+    public abstract void writeResponseHeader(int code, int contentLength) throws IOException;
 
+    /**
+     * 回收协议，用于重复使用
+     */
+    public abstract void recycle();
+
+    /**
+     * 应答码转换为应答信息
+     * @param code 应答码
+     * @return 应答信息
+     */
     public abstract String msg(int code);
 
-    public abstract void success(int code, String text);
+    /**
+     * 向输出流写入成功头信息，1xx,2xx,3xx都属于
+     * @param code 应答码
+     * @param text 应答信息
+     */
+    public abstract void writeSuccess(int code, String text);
 
-    public abstract void error(int code, String text);
+    /**
+     * 向输出流写入错误头信息，4xx都属于
+     * @param code 应答码
+     * @param text 应答信息
+     */
+    public abstract void writeError(int code, String text);
 
+    /**
+     * 协议名称
+     * @return 返回协议名称
+     */
     public abstract String getName();
+
+    /**
+     * 协议版本号
+     * @return 返回协议版本号
+     */
+    public abstract String getVersion();
 }

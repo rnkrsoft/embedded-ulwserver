@@ -85,7 +85,7 @@ public class EmbeddedHttpServletRequest implements HttpServletRequest {
         this.queryString = this.queryString == null ? "" : this.queryString;
 
         String cookieString = connection.getRequestHeader().getCookie();
-        List<Cookie> cookies = CookieProcessor.parse(cookieString);
+        List<Cookie> cookies = EmbeddedCookieProcessor.parse(cookieString);
         this.cookies = cookies.toArray(new Cookie[cookies.size()]);
         try {
             this.byteBuf.read(new FixedLengthInputStream(connection.getRawIn(), connection.getRequestHeader().getContentLength(), new EndStreamCallback() {

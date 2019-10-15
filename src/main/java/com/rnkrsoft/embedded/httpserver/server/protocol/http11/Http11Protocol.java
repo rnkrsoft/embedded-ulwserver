@@ -25,7 +25,7 @@ public class Http11Protocol extends HttpProtocol {
     protected void handle0(HttpConnection connection) throws IOException {
         try {
             if (!HTTP_VERSION_11.equals(connection.getVersion())) {
-                error(HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED, "HTTP protocol version " + connection.getVersion() + "is not supported!");
+                writeError(HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED, "HTTP protocol version " + connection.getVersion() + "is not supported!");
                 return;
             }
             this.connection = connection;
@@ -60,7 +60,7 @@ public class Http11Protocol extends HttpProtocol {
         //2.接收到Server返回的100-continue应答以后, 才把数据POST给Server
         if (exp != null && exp.equalsIgnoreCase("100-continue")) {
             //TODO
-            success(HttpServletResponse.SC_CONTINUE, "");
+            writeSuccess(HttpServletResponse.SC_CONTINUE, "");
         }
         //首先进行静态资源查找，如果没有，则访问Servlet
         HttpHandler[] handlers = connection.getServer().getHandlers();
@@ -70,15 +70,15 @@ public class Http11Protocol extends HttpProtocol {
             }
         }
     }
-    public void responseHeader(int code, int contentLength, List<String> setCookies) throws IOException {
+    public void writeResponseHeader(int code, int contentLength, List<String> setCookies) throws IOException {
         //向客户端写入头信息
         for (String setCookie : setCookies){
             connection.getResponseHeader().addSetCookie(setCookie);
         }
-        responseHeader(code, contentLength);
+        writeResponseHeader(code, contentLength);
     }
 
-    public void responseHeader(int code, int contentLength) throws IOException {
+    public void writeResponseHeader(int code, int contentLength) throws IOException {
         if (writeResponseHeader) {
             throw new IOException("HTTP headers has already write");
         }
@@ -92,7 +92,7 @@ public class Http11Protocol extends HttpProtocol {
                 || (code == HttpServletResponse.SC_NO_CONTENT)
                 || (code == HttpServletResponse.SC_NOT_MODIFIED)) {
             if (contentLength != -1) {
-                log.info("responseHeader: code = {}: forcing contentLen = -1", code);
+                log.info("writeResponseHeader: code = {}: forcing contentLen = -1", code);
             }
             contentLength = -1;
         }
@@ -128,17 +128,17 @@ public class Http11Protocol extends HttpProtocol {
     }
 
     @Override
-    public void clear() {
+    public void recycle() {
         connection = null;
         writeResponseHeader = false;
     }
 
-    public void success(int code, String text) {
+    public void writeSuccess(int code, String text) {
         assert code >= 100 && code < 300;
         sendResult(code, text);
     }
 
-    public void error(int code, String text) {
+    public void writeError(int code, String text) {
         assert code >= 400 && code < 600;
         sendResult(code, text);
     }
@@ -146,6 +146,11 @@ public class Http11Protocol extends HttpProtocol {
     @Override
     public String getName() {
         return "http";
+    }
+
+    @Override
+    public String getVersion() {
+        return "1.1";
     }
 
     void sendResult(int code, String text) {

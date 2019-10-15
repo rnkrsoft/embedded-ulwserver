@@ -2,6 +2,7 @@ package com.rnkrsoft.embedded.httpserver;
 
 /**
  * Created by rnkrsoft.com on 2019/10/14.
+ * 抽象的生命周期类
  */
 public abstract class AbstractLifeCycle implements LifeCycle{
     protected LifeStatus status = LifeStatus.STOPPED;

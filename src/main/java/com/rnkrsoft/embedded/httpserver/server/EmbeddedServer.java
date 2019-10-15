@@ -7,12 +7,16 @@ import com.rnkrsoft.embedded.httpserver.server.event.Event;
 import com.rnkrsoft.embedded.httpserver.server.event.HandleFinishEvent;
 import com.rnkrsoft.embedded.httpserver.server.handler.ServletHandler;
 import com.rnkrsoft.embedded.httpserver.server.handler.StaticResourceHandler;
+import com.rnkrsoft.embedded.httpserver.server.servlet.EmbeddedServletConfig;
+import com.rnkrsoft.embedded.httpserver.server.servlet.EmbeddedServletContext;
 import com.rnkrsoft.utils.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.BindException;
@@ -211,12 +215,12 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
         return urlMappingServlets.get(urlPattern);
     }
 
-    public Servlet lookupServlet(String urlPattern) {
+    public Servlet lookupServlet(String urlPattern, ServletContext servletContext) throws ServletException {
         Servlet servlet = servletPool.get(urlPattern);
         if (servlet == null) {
             synchronized (servletPool) {
                 if (servlet == null) {
-                    ServletMetadata servletMetadata = urlMappingServlets.get(urlPattern);
+                    final ServletMetadata servletMetadata = lookupServletMetadata(urlPattern);
                     if (servletMetadata == null) {
                         return servlet;
                     }
@@ -224,6 +228,8 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
                     try {
                         if (servletClass.getConstructor() != null) {
                             servlet = servletClass.getConstructor().newInstance();
+                            EmbeddedServletConfig servletConfig = new EmbeddedServletConfig((EmbeddedServletContext) servletContext, servletMetadata);
+                            servlet.init(servletConfig);
                         }
                     } catch (NoSuchMethodException e) {
                         e.printStackTrace();

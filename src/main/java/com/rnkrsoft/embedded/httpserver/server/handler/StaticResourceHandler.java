@@ -2,25 +2,49 @@ package com.rnkrsoft.embedded.httpserver.server.handler;
 
 
 import com.rnkrsoft.embedded.httpserver.HttpConnection;
-import com.rnkrsoft.embedded.httpserver.HttpHandler;
 import com.rnkrsoft.embedded.httpserver.HttpProtocol;
 import com.rnkrsoft.embedded.httpserver.HttpServer;
 import com.rnkrsoft.embedded.httpserver.server.HttpHeader;
 import com.rnkrsoft.embedded.httpserver.server.io.IOUtils;
-import lombok.Getter;
-import lombok.Setter;
+import com.rnkrsoft.utils.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by rnkrsoft.com on 2019/10/12.
  */
+@Slf4j
 public class StaticResourceHandler extends AbstractHandler {
+
+    static Map<String, String> CONTENT_TYPES = new HashMap<String, String>();
+
+    static {
+        CONTENT_TYPES.put("css", "text/css; charset=UTF-8");
+        CONTENT_TYPES.put("js", "application/x-javascript; charset=UTF-8");
+        CONTENT_TYPES.put("json", "application/json; charset=UTF-8");
+        CONTENT_TYPES.put("jpg", "image/jpeg");
+        CONTENT_TYPES.put("jpeg", "image/jpeg");
+        CONTENT_TYPES.put("gif", "image/gif");
+        CONTENT_TYPES.put("png", "image/png");
+        CONTENT_TYPES.put("ico", "image/x-icon");
+        CONTENT_TYPES.put("htm", "text/html; charset=UTF-8");
+        CONTENT_TYPES.put("html", "text/html; charset=UTF-8");
+        CONTENT_TYPES.put("xml", "text/xml; charset=UTF-8");
+        CONTENT_TYPES.put("svg", "image/svg+xml; charset=UTF-8");
+        CONTENT_TYPES.put("woff", "application/x-font-woff; charset=UTF-8");
+        CONTENT_TYPES.put("woff2", "application/octet-stream");
+        CONTENT_TYPES.put("eot", "application/vnd.ms-fontobject");
+        CONTENT_TYPES.put("ttf", "application/x-font-ttf");
+    }
 
     public StaticResourceHandler(HttpServer server) {
         super(server);
@@ -32,18 +56,29 @@ public class StaticResourceHandler extends AbstractHandler {
     }
 
     boolean staticResource(HttpConnection connection) throws IOException {
+        URI uri = connection.getUri();
+        if (log.isDebugEnabled()) {
+            log.debug("begin load static resource '{}'", uri.getPath());
+        }
+        //获取当前连接绑定的协议
         HttpProtocol protocol = connection.getProtocol();
+        //应答头信息
         HttpHeader responseHeader = connection.getResponseHeader();
         OutputStream rawOut = connection.getRawOut();
         //路径
         String path = "";
         //文件名
-        String fileName = connection.getUri().getPath();
-        if (fileName.equals("/")) {//如果是首页，则遍历设置的，看是否能够加载成功
+        String fileName = uri.getPath();
+        //如果是首页，则遍历设置的，看是否能够加载成功
+        if (fileName.equals("/")) {
             List<String> welcomes = connection.getServer().getWelcomes();
             for (String welcome : welcomes) {
                 if (loadStaticResource(connection, protocol, responseHeader, rawOut, path, welcome)) {
+                    log.debug("load welcome page '{}' is successful.", welcome);
                     return true;
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("load welcome page '{}' is failure.", welcome);
                 }
             }
             return false;
@@ -65,6 +100,9 @@ public class StaticResourceHandler extends AbstractHandler {
     }
 
     private boolean loadStaticResource(HttpConnection connection, HttpProtocol protocol, HttpHeader responseHeader, OutputStream rawOut, String path, String fileName) {
+        if (log.isDebugEnabled()) {
+            log.debug("try load welcome page '{}'...", fileName);
+        }
         InputStream is;
         try {
             int lastFilePos = fileName.lastIndexOf(".");
@@ -74,7 +112,10 @@ public class StaticResourceHandler extends AbstractHandler {
                 suffix = fileName.substring(lastFilePos + 1);
                 suffix = suffix.toLowerCase();
             }
-            String name = connection.getServer().getConfig().getString("WEB_ROOT", "META-INF/resources") + "/";
+            String name = connection.getServer().getConfig().getString("WEB_ROOT", "META-INF/resources");
+            if (name.charAt(name.length() - 1) != '/'){
+                name += "/";
+            }
             if (path.isEmpty()) {
                 name += fileName;
             } else {
@@ -85,40 +126,10 @@ public class StaticResourceHandler extends AbstractHandler {
                 //不存在则返回
                 return false;
             }
-            if ("css".equals(suffix)) {
-                responseHeader.contentType("text/css; charset=UTF-8");
-            } else if ("js".equals(suffix)) {
-                responseHeader.contentType("application/x-javascript; charset=UTF-8");
-            } else if ("jpg".equals(suffix) || "jpeg".equals(suffix)) {
-                responseHeader.contentType("image/jpeg");
-            } else if ("gif".equals(suffix)) {
-                responseHeader.contentType("image/gif");
-            } else if ("png".equals(suffix)) {
-                responseHeader.contentType("image/png");
-            } else if ("ico".equals(suffix)) {
-                responseHeader.contentType("image/x-icon");
-            } else if ("htm".equals(suffix) || "html".equals(suffix)) {
-                responseHeader.contentType("text/html; charset=UTF-8");
-            } else if ("xml".equals(suffix)) {
-                responseHeader.contentType("text/xml; charset=UTF-8");
-            } else if ("svg".equals(suffix)) {
-                responseHeader.contentType("image/svg+xml; charset=UTF-8");
-            } else if ("svg".equals(suffix)) {
-                responseHeader.contentType("image/svg+xml; charset=UTF-8");
-            } else if ("woff".equals(suffix)) {
-                responseHeader.contentType("application/x-font-woff; charset=UTF-8");
-            } else if ("woff2".equals(suffix)) {
-                responseHeader.contentType("application/octet-stream");
-            } else if ("eot".equals(suffix)) {
-                responseHeader.contentType("application/vnd.ms-fontobject");
-            } else if ("ttf".equals(suffix)) {
-                responseHeader.contentType("application/x-font-ttf");
-            } else {
-                responseHeader.contentType("application/octet-stream");
-            }
+            responseHeader.contentType(StringUtils.safeToString(CONTENT_TYPES.get(suffix), "application/octet-stream"));
             is = url.openStream();
             int contentLength = is.available();
-            protocol.responseHeader(HttpServletResponse.SC_OK, contentLength);
+            protocol.writeResponseHeader(HttpServletResponse.SC_OK, contentLength);
             IOUtils.copy(is, rawOut);
             rawOut.flush();
             return true;

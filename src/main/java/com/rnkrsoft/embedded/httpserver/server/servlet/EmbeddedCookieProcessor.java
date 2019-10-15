@@ -12,7 +12,7 @@ import java.util.Locale;
  * Created by rnkrsoft.com on 2019/10/14.
  */
 @Slf4j
-public class CookieProcessor {
+public class EmbeddedCookieProcessor {
     public static List<Cookie> parse(String cookieString) {
         List<Cookie> cookies = parseCookieRfc6265(cookieString);
         return cookies;

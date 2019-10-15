@@ -5,6 +5,8 @@ import com.rnkrsoft.embedded.httpserver.server.ServletMetadata;
 import com.rnkrsoft.embedded.httpserver.server.event.Event;
 
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -60,9 +62,10 @@ public interface HttpServer extends LifeCycle{
      * 根据绑定的URL路径查询Servlet实例
      *
      * @param urlPattern URL路径
+     * @param servletContext Servlet上下文
      * @return Servlet实例
      */
-    Servlet lookupServlet(String urlPattern);
+    Servlet lookupServlet(String urlPattern, ServletContext servletContext) throws ServletException;
 
     List<String> getWelcomes();
     /**

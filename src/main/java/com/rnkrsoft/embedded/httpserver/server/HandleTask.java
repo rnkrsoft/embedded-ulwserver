@@ -29,7 +29,7 @@ class HandleTask implements Runnable {
             protocols.set(protocol);
         }else{
             //清理连接器成员变量和状态
-            protocol.clear();
+            protocol.recycle();
         }
         try {
             //连接器处理连接对象

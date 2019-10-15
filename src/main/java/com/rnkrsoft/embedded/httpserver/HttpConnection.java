@@ -20,9 +20,11 @@ import java.util.List;
  * 对HTTP连接的抽象封装
  */
 public interface HttpConnection {
-    enum State {IDLE, REQUEST, RESPONSE}
-
-    ;
+    enum State {
+        IDLE,
+        REQUEST,
+        RESPONSE
+    }
 
     /**
      * 获取状态
