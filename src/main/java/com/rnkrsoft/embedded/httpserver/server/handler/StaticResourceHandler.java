@@ -6,6 +6,7 @@ import com.rnkrsoft.embedded.httpserver.HttpProtocol;
 import com.rnkrsoft.embedded.httpserver.HttpServer;
 import com.rnkrsoft.embedded.httpserver.server.HttpHeader;
 import com.rnkrsoft.embedded.httpserver.server.io.IOUtils;
+import com.rnkrsoft.embedded.httpserver.server.mime.MimeRegistry;
 import com.rnkrsoft.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,30 +22,10 @@ import java.util.Map;
 
 /**
  * Created by rnkrsoft.com on 2019/10/12.
+ * 静态资源处理器
  */
 @Slf4j
 public class StaticResourceHandler extends AbstractHandler {
-
-    static Map<String, String> CONTENT_TYPES = new HashMap<String, String>();
-
-    static {
-        CONTENT_TYPES.put("css", "text/css; charset=UTF-8");
-        CONTENT_TYPES.put("js", "application/x-javascript; charset=UTF-8");
-        CONTENT_TYPES.put("json", "application/json; charset=UTF-8");
-        CONTENT_TYPES.put("jpg", "image/jpeg");
-        CONTENT_TYPES.put("jpeg", "image/jpeg");
-        CONTENT_TYPES.put("gif", "image/gif");
-        CONTENT_TYPES.put("png", "image/png");
-        CONTENT_TYPES.put("ico", "image/x-icon");
-        CONTENT_TYPES.put("htm", "text/html; charset=UTF-8");
-        CONTENT_TYPES.put("html", "text/html; charset=UTF-8");
-        CONTENT_TYPES.put("xml", "text/xml; charset=UTF-8");
-        CONTENT_TYPES.put("svg", "image/svg+xml; charset=UTF-8");
-        CONTENT_TYPES.put("woff", "application/x-font-woff; charset=UTF-8");
-        CONTENT_TYPES.put("woff2", "application/octet-stream");
-        CONTENT_TYPES.put("eot", "application/vnd.ms-fontobject");
-        CONTENT_TYPES.put("ttf", "application/x-font-ttf");
-    }
 
     public StaticResourceHandler(HttpServer server) {
         super(server);
@@ -52,10 +33,16 @@ public class StaticResourceHandler extends AbstractHandler {
 
     @Override
     public boolean handleRequest(HttpConnection connection) throws IOException {
-        return staticResource(connection);
+        return loadStaticResource(connection);
     }
 
-    boolean staticResource(HttpConnection connection) throws IOException {
+    /**
+     * 加载静态资源
+     * @param connection 连接对象
+     * @return 是否已处理
+     * @throws IOException IO异常
+     */
+    boolean loadStaticResource(HttpConnection connection) throws IOException {
         URI uri = connection.getUri();
         if (log.isDebugEnabled()) {
             log.debug("begin load static resource '{}'", uri.getPath());
@@ -99,18 +86,28 @@ public class StaticResourceHandler extends AbstractHandler {
 
     }
 
-    private boolean loadStaticResource(HttpConnection connection, HttpProtocol protocol, HttpHeader responseHeader, OutputStream rawOut, String path, String fileName) {
+    /**
+     * 加载静态资源
+     * @param connection 连接对象
+     * @param protocol 协议对象
+     * @param responseHeader 应答头信息
+     * @param rawOut 原生输出流
+     * @param path 路径
+     * @param fileName 文件名
+     * @return 是否处理
+     */
+    boolean loadStaticResource(HttpConnection connection, HttpProtocol protocol, HttpHeader responseHeader, OutputStream rawOut, String path, String fileName) {
         if (log.isDebugEnabled()) {
             log.debug("try load welcome page '{}'...", fileName);
         }
         InputStream is;
         try {
             int lastFilePos = fileName.lastIndexOf(".");
-            String suffix = "";
+            String extension = "";
             //文件资源必须有后缀名
             if (lastFilePos > -1) {
-                suffix = fileName.substring(lastFilePos + 1);
-                suffix = suffix.toLowerCase();
+                extension = fileName.substring(lastFilePos + 1);
+                extension = extension.toLowerCase();
             }
             String name = connection.getServer().getConfig().getString("WEB_ROOT", "META-INF/resources");
             if (name.charAt(name.length() - 1) != '/'){
@@ -126,7 +123,7 @@ public class StaticResourceHandler extends AbstractHandler {
                 //不存在则返回
                 return false;
             }
-            responseHeader.contentType(StringUtils.safeToString(CONTENT_TYPES.get(suffix), "application/octet-stream"));
+            responseHeader.contentType(MimeRegistry.lookupContentType(extension));
             is = url.openStream();
             int contentLength = is.available();
             protocol.writeResponseHeader(HttpServletResponse.SC_OK, contentLength);

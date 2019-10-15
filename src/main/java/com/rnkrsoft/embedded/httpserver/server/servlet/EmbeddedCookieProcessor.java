@@ -10,9 +10,15 @@ import java.util.Locale;
 
 /**
  * Created by rnkrsoft.com on 2019/10/14.
+ * Cookie处理器
  */
 @Slf4j
 public class EmbeddedCookieProcessor {
+    /**
+     * 将Cookie字符串解析为Cookie数组
+     * @param cookieString 从HTTP头信息中获取的Cookie字符串
+     * @return Cookie数组
+     */
     public static List<Cookie> parse(String cookieString) {
         List<Cookie> cookies = parseCookieRfc6265(cookieString);
         return cookies;
@@ -39,7 +45,11 @@ public class EmbeddedCookieProcessor {
         return setCookies;
     }
 
-
+    /**
+     * 按照RFC6265协议进行Cookie的解析
+     * @param cookieString Cookie字符串
+     * @return Cookie数组
+     */
     static List<Cookie> parseCookieRfc6265(String cookieString) {
         List<Cookie> cookies = new ArrayList<Cookie>();
         if (cookieString == null) {
@@ -200,7 +210,7 @@ public class EmbeddedCookieProcessor {
                         cookies.add(cookie);
                     }
                 } catch (Exception e) {
-                    log.debug("happens error!", e);
+                    log.error("parse cookie happens error!", e);
                 }
                 name = null;
                 value = null;
@@ -250,6 +260,7 @@ public class EmbeddedCookieProcessor {
     }
 
     /**
+     * 判断是否为需要转义的字符
      * @param c
      * @return
      */
@@ -257,6 +268,11 @@ public class EmbeddedCookieProcessor {
         return ((c == 'n') || (c == 'r') || (c == 't') || (c == 'f') || (c == 'b') || (c == '\\') || (c == '/') || (c == '"') || (c == 'u'));
     }
 
+    /**
+     * 按照RFC2109协议进行Cookie解析
+     * @param cookie
+     * @return
+     */
     static List<Cookie> parseCookieRfc2109(String cookie) {
         return new ArrayList<Cookie>();
     }

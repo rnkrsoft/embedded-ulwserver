@@ -5,6 +5,7 @@ import java.util.Map;
 
 /**
  * Created by rnkrsoft.com on 2019/10/15.
+ * 支持重复键的键值对，与Map没什么关系
  */
 public interface RepeatableMap<K, V>{
     /**

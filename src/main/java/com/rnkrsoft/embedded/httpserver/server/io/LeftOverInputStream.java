@@ -3,7 +3,10 @@ package com.rnkrsoft.embedded.httpserver.server.io;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+/**
+ * Created by rnkrsoft.com on 2019/10/12.
+ * 剩余内容的输入流
+ */
 abstract class LeftOverInputStream extends FilterInputStream {
     protected boolean closed = false;
     protected boolean eof = false;
@@ -36,7 +39,7 @@ abstract class LeftOverInputStream extends FilterInputStream {
 
     public synchronized int read() throws IOException {
         if (closed) {
-            throw new IOException("Stream is closed");
+            throw new IOException("LeftOverInputStream is closed");
         }
         int c = read0(one, 0, 1);
         if (c == -1 || c == 0) {
@@ -48,21 +51,27 @@ abstract class LeftOverInputStream extends FilterInputStream {
 
     public synchronized int read(byte[] b, int off, int len) throws IOException {
         if (closed) {
-            throw new IOException("Stream is closed");
+            throw new IOException("LeftOverInputStream is closed");
         }
         return read0(b, off, len);
     }
 
-    public boolean drain(long l) throws IOException {
+    /**
+     * 将指定长度的输入流进行排空
+     * @param length 排空长度
+     * @return 是否排空成功
+     * @throws IOException IO异常
+     */
+    public boolean drain(long length) throws IOException {
         int bufSize = 2048;
         byte[] db = new byte[bufSize];
-        while (l > 0) {
+        while (length > 0) {
             long len = read0(db, 0, bufSize);
             if (len == -1) {
                 eof = true;
                 return true;
             } else {
-                l = l - len;
+                length = length - len;
             }
         }
         return false;

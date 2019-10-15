@@ -19,6 +19,7 @@ import java.util.List;
 
 /**
  * Created by rnkrsoft.com on 2019/10/12.
+ * Servlet处理器，用于实现Servlet协议规范
  */
 @Slf4j
 public class ServletHandler extends AbstractHandler {
@@ -37,7 +38,7 @@ public class ServletHandler extends AbstractHandler {
         //在容器中查找Servlet
         final Servlet servlet;
         try {
-            servlet = server.lookupServlet(urlPath, servletContext);
+            servlet = ServletRegistry.lookupServlet(urlPath, servletContext);
         } catch (ServletException e) {
             if (log.isErrorEnabled()) {
                 log.error("lookup servlet happens error!", e);

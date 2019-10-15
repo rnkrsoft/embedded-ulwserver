@@ -9,6 +9,7 @@ import com.rnkrsoft.embedded.httpserver.server.handler.ServletHandler;
 import com.rnkrsoft.embedded.httpserver.server.handler.StaticResourceHandler;
 import com.rnkrsoft.embedded.httpserver.server.servlet.EmbeddedServletConfig;
 import com.rnkrsoft.embedded.httpserver.server.servlet.EmbeddedServletContext;
+import com.rnkrsoft.embedded.httpserver.server.servlet.ServletRegistry;
 import com.rnkrsoft.utils.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -60,14 +60,7 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
     HttpHandler[] handlers = null;
     @Getter
     ConfigProvider config;
-    /**
-     * 注册的Servlet
-     */
-    final Map<String, ServletMetadata> urlMappingServlets = new HashMap<String, ServletMetadata>();
 
-    final Set<ServletMetadata> servletMetadataPool = new HashSet<ServletMetadata>();
-
-    final Map<String, ? extends Servlet> servletPool = new HashMap<String, Servlet>();
 
     final List<String> welcomes = new ArrayList<String>(Arrays.asList("index.html"));
 
@@ -77,9 +70,23 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
         this.serverSocketChannel.configureBlocking(false);
         this.listenerKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         this.dispatcher = new Dispatcher();
-        this.executor = Executors.newCachedThreadPool();
         this.config = config;
         this.handlers = new HttpHandler[]{new StaticResourceHandler(this), new ServletHandler(this)};
+
+        String hostName = config.getString("server.http.hostName", "localhost");
+        String protocol = config.getString("server.http.protocol", "HTTP/1.1");
+        String contextPath = config.getString("server.http.contextPath", "");
+        String runtimeDir = config.getString("server.http.runtimeDir", "./work");
+        String temp = runtimeDir + "/temp";
+        String contextDocBase = runtimeDir + "/httpserver-docBase";
+        boolean useBodyEncodingForURI = config.getBoolean("server.http.useBodyEncodingForURI", true);
+        String uriEncoding = config.getString("server.http.uriEncoding", "UTF-8");
+        int asyncTimeout = config.getInteger("server.http.asyncTimeout", 30000);
+        int connectionTimeout = config.getInteger("server.http.connectionTimeout", 30000);
+        int maxConnections = config.getInteger("server.http.maxConnections", 30000);
+        int maxThreads = config.getInteger("server.http.maxThreads", 100);
+        String file_encoding = config.getString("file.encoding", "UTF-8");
+        this.executor = new ThreadPoolExecutor(0, maxThreads, connectionTimeout, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>());
     }
 
     static ConfigProvider defaultConfig() {
@@ -156,7 +163,7 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
             for (WebXml.ParamTag paramTag : servletTag.getInitParams()) {
                 servletMetadata.getInitParams().put(paramTag.getParamName(), paramTag.getParamValue());
             }
-            registerServlet(servletMetadata);
+            ServletRegistry.registerServlet(servletMetadata);
         }
         for (String index : webXml.getWelcomeFileList()) {
             welcomes.clear();
@@ -170,12 +177,7 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
         return null;
     }
 
-    void registerServlet(ServletMetadata servletMetadata) {
-        servletMetadataPool.add(servletMetadata);
-        for (String urlPattern : servletMetadata.getUrlPatterns()){
-            urlMappingServlets.put(urlPattern, servletMetadata);
-        }
-    }
+
 
     @Override
     public HttpServer register(String servletName, Class<? extends Servlet> servletClass, Properties initParams, int loadOnStartup, String ... urlPatterns) {
@@ -188,7 +190,7 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
         for (Map.Entry<Object, Object> entry : initParams.entrySet()) {
             servletMetadata.getInitParams().put(StringUtils.safeToString(entry.getKey()), StringUtils.safeToString(entry.getValue()));
         }
-        registerServlet(servletMetadata);
+        ServletRegistry.registerServlet(servletMetadata);
         return this;
     }
 
@@ -209,41 +211,6 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
     //-------------------------------------------------------以下为私有方法---------------------------------------------------
     void closeConnection(HttpConnection conn) {
         conn.close();
-    }
-
-    public ServletMetadata lookupServletMetadata(String urlPattern){
-        return urlMappingServlets.get(urlPattern);
-    }
-
-    public Servlet lookupServlet(String urlPattern, ServletContext servletContext) throws ServletException {
-        Servlet servlet = servletPool.get(urlPattern);
-        if (servlet == null) {
-            synchronized (servletPool) {
-                if (servlet == null) {
-                    final ServletMetadata servletMetadata = lookupServletMetadata(urlPattern);
-                    if (servletMetadata == null) {
-                        return servlet;
-                    }
-                    Class<? extends Servlet> servletClass = servletMetadata.getServletClass();
-                    try {
-                        if (servletClass.getConstructor() != null) {
-                            servlet = servletClass.getConstructor().newInstance();
-                            EmbeddedServletConfig servletConfig = new EmbeddedServletConfig((EmbeddedServletContext) servletContext, servletMetadata);
-                            servlet.init(servletConfig);
-                        }
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    } catch (InstantiationException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        return servlet;
     }
 
     @Override
@@ -268,19 +235,6 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
             throw new NullPointerException("executor is null");
         }
         status = LifeStatus.STARTING;
-        String hostName = config.getString("server.http.hostName", "localhost");
-        String protocol = config.getString("server.http.protocol", "HTTP/1.1");
-        String contextPath = config.getString("server.http.contextPath", "");
-        String runtimeDir = config.getString("server.http.runtimeDir", "./work");
-        String temp = runtimeDir + "/temp";
-        String contextDocBase = runtimeDir + "/tomcat-docBase";
-        boolean useBodyEncodingForURI = config.getBoolean("server.http.useBodyEncodingForURI", true);
-        String uriEncoding = config.getString("server.http.uriEncoding", "UTF-8");
-        int asyncTimeout = config.getInteger("server.http.asyncTimeout", 30000);
-        int connectionTimeout = config.getInteger("server.http.connectionTimeout", 30000);
-        int maxConnections = config.getInteger("server.http.maxConnections", 30000);
-        int maxThreads = config.getInteger("server.http.maxThreads", 100);
-        String file_encoding = config.getString("file.encoding", "UTF-8");
         if (handlers != null) {
             for (int i = 0; i < handlers.length; i++) {
                 HttpHandler handler = handlers[i];
@@ -288,7 +242,7 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
             }
         }
         //启动分发线程
-        dispatcherThread = new Thread(null, dispatcher, "HTTP-DISPATCHER", 0);
+        dispatcherThread = new Thread(null, dispatcher, "http-dispatcher", 0);
         log.info("start http dispatcher thread... ");
         dispatcherThread.start();
         status = LifeStatus.STARTED;
@@ -340,10 +294,10 @@ public class EmbeddedServer extends AbstractLifeCycle implements HttpServer {
                     if (selectionKeys.isEmpty()) {
                         continue;
                     }
-                    Iterator<SelectionKey> iter = selectionKeys.iterator();
-                    while (iter.hasNext()) {
-                        SelectionKey key = iter.next();
-                        iter.remove();
+                    Iterator<SelectionKey> it = selectionKeys.iterator();
+                    while (it.hasNext()) {
+                        SelectionKey key = it.next();
+                        it.remove();
                         if (key.equals(listenerKey)) {//如果有新连接接入
                             if (isStopping()) {
                                 continue;

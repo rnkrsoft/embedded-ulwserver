@@ -7,6 +7,7 @@ import java.util.ListIterator;
 
 /**
  * Created by rnkrsoft.com on 2019/10/10.
+ * Servlet过滤链
  */
 public class EmbeddedFilterChain implements FilterChain {
     ListIterator<Filter> iterator;

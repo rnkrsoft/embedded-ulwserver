@@ -9,6 +9,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Created by rnkrsoft.com on 2019/10/10.
+ *  原生输出流，向NIO SocketChannel写入数据
  */
 @Slf4j
 public class RawOutputStream extends java.io.OutputStream {
@@ -37,7 +38,7 @@ public class RawOutputStream extends java.io.OutputStream {
     public void write(byte[] bytes, int off, int len) throws IOException {
         int length = len;
         if (closed) {
-            throw new IOException("OutputStream is closed");
+            throw new IOException("RawOutputStream is closed");
         }
         int cap = buf.capacity();
         if (cap < len) {
@@ -61,7 +62,7 @@ public class RawOutputStream extends java.io.OutputStream {
             return;
         }
         if (log.isDebugEnabled()){
-            log.debug("RawOutputStream.close, socketChannel.isOpen()={}", socketChannel.isOpen());
+            log.debug("socketChannel.isOpen()={}", socketChannel.isOpen());
         }
         socketChannel.close();
         closed = true;

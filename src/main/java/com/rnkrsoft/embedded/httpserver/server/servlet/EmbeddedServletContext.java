@@ -1,6 +1,7 @@
 package com.rnkrsoft.embedded.httpserver.server.servlet;
 
 import com.rnkrsoft.embedded.httpserver.server.EmbeddedHttpConnection;
+import com.rnkrsoft.embedded.httpserver.server.mime.MimeRegistry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,17 +62,17 @@ public class EmbeddedServletContext implements ServletContext {
 
     @Override
     public int getMajorVersion() {
-        return 0;
+        return 3;
     }
 
     @Override
     public int getMinorVersion() {
-        return 0;
+        return 1;
     }
 
     @Override
     public int getEffectiveMajorVersion() {
-        return 0;
+        return 3;
     }
 
     @Override
@@ -81,7 +82,14 @@ public class EmbeddedServletContext implements ServletContext {
 
     @Override
     public String getMimeType(String file) {
-        return null;
+        int lastFilePos = file.lastIndexOf(".");
+        String extension = "*";
+        //文件资源必须有后缀名
+        if (lastFilePos > -1) {
+            extension = file.substring(lastFilePos + 1);
+            extension = extension.toLowerCase();
+        }
+        return MimeRegistry.lookupContentType(extension);
     }
 
     @Override

@@ -9,23 +9,23 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Created by rnkrsoft.com on 2019/10/10.
+ * 原生输入流
  */
 public class RawInputStream extends InputStream {
     SocketChannel channel;
-    ByteBuffer chanbuf;
+    ByteBuffer chanBuf;
     byte[] one;
     private boolean closed = false, eof = false;
-    ByteBuffer markBuf; /* reads may be satisfied from this buffer */
+    ByteBuffer markBuf;
     boolean marked;
     boolean reset;
-    int readlimit;
-    static long readTimeout;
+    int readLimit;
     final static int BUF_SIZE = 8 * 1024;
 
     public RawInputStream(SocketChannel channel) throws IOException {
         this.channel = channel;
-        chanbuf = ByteBuffer.allocate(BUF_SIZE);
-        chanbuf.clear();
+        chanBuf = ByteBuffer.allocate(BUF_SIZE);
+        chanBuf.clear();
         one = new byte[1];
         closed = marked = reset = false;
     }
@@ -48,7 +48,7 @@ public class RawInputStream extends InputStream {
         int canReturn, willReturn;
 
         if (closed) {
-            throw new IOException("Stream closed");
+            throw new IOException("RawInputStream is closed");
         }
         if (eof) {
             return -1;
@@ -66,20 +66,20 @@ public class RawInputStream extends InputStream {
                 reset = false;
             }
         } else { /* satisfy from channel */
-            chanbuf.clear();
+            chanBuf.clear();
             //设置需要读取的长度为传入的长度
             if (srclen < BUF_SIZE) {
-                chanbuf.limit(srclen);
+                chanBuf.limit(srclen);
             }
             do {
-                willReturn = channel.read(chanbuf);
+                willReturn = channel.read(chanBuf);
             } while (willReturn == 0);
             if (willReturn == -1) {
                 eof = true;
                 return -1;
             }
-            chanbuf.flip();
-            chanbuf.get(b, off, willReturn);
+            chanBuf.flip();
+            chanBuf.get(b, off, willReturn);
 
             if (marked) { /* copy into markBuf */
                 try {
@@ -96,10 +96,9 @@ public class RawInputStream extends InputStream {
         return true;
     }
 
-    /* Does not query the OS socket */
     public synchronized int available() throws IOException {
         if (closed)
-            throw new IOException("Stream is closed");
+            throw new IOException("RawInputStream is closed");
 
         if (eof)
             return -1;
@@ -107,7 +106,7 @@ public class RawInputStream extends InputStream {
         if (reset)
             return markBuf.remaining();
 
-        return chanbuf.remaining();
+        return chanBuf.remaining();
     }
 
     public void close() throws IOException {
@@ -121,7 +120,7 @@ public class RawInputStream extends InputStream {
     public synchronized void mark(int readlimit) {
         if (closed)
             return;
-        this.readlimit = readlimit;
+        this.readLimit = readlimit;
         markBuf = ByteBuffer.allocate(readlimit);
         marked = true;
         reset = false;
@@ -131,7 +130,7 @@ public class RawInputStream extends InputStream {
         if (closed)
             return;
         if (!marked)
-            throw new IOException("Stream not marked");
+            throw new IOException("RawInputStream is not marked");
         marked = false;
         reset = true;
         markBuf.flip();

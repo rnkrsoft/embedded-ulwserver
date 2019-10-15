@@ -25,7 +25,7 @@ public class Http11Protocol extends HttpProtocol {
     protected void handle0(HttpConnection connection) throws IOException {
         try {
             if (!HTTP_VERSION_11.equals(connection.getVersion())) {
-                writeError(HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED, "HTTP protocol version " + connection.getVersion() + "is not supported!");
+                writeError(HttpServletResponse.SC_HTTP_VERSION_NOT_SUPPORTED, "http protocol version " + connection.getVersion() + "is not supported!");
                 return;
             }
             this.connection = connection;

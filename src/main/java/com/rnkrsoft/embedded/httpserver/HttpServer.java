@@ -52,21 +52,6 @@ public interface HttpServer extends LifeCycle{
 
     ConfigProvider getConfig();
 
-    /**
-     * 根据映射url查找Servlet元信息
-     * @param urlPattern url
-     * @return 元信息
-     */
-    ServletMetadata lookupServletMetadata(String urlPattern);
-    /**
-     * 根据绑定的URL路径查询Servlet实例
-     *
-     * @param urlPattern URL路径
-     * @param servletContext Servlet上下文
-     * @return Servlet实例
-     */
-    Servlet lookupServlet(String urlPattern, ServletContext servletContext) throws ServletException;
-
     List<String> getWelcomes();
     /**
      * 以WebXml对象设置容器

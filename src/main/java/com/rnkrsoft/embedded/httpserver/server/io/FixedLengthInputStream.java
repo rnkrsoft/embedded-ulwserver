@@ -3,6 +3,10 @@ package com.rnkrsoft.embedded.httpserver.server.io;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Created by rnkrsoft.com on 2019/10/12.
+ * 根据指定的长度进行读取，要注意的是如果流中没有这么长的数据，则会造成阻塞
+ */
 public class FixedLengthInputStream extends LeftOverInputStream {
     long remaining;
     EndStreamCallback endStreamCallback;
