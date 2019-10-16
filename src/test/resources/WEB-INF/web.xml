@@ -7,7 +7,7 @@
 
     <servlet>
         <servlet-name>hello</servlet-name>
-        <servlet-class>com.rnkrsoft.embedded.httpserver.server.servlet.HelloServlet</servlet-class>
+        <servlet-class>com.rnkrsoft.embedded.ulwserver.server.servlet.HelloServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>hello</servlet-name>

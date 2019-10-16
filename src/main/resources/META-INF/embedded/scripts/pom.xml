@@ -11,7 +11,7 @@
         <lombok.version>1.16.16</lombok.version>
         <junit.version>4.12</junit.version>
         <logger4j.version>1.0.0</logger4j.version>
-        <embedded-tomcat.version>1.0.3</embedded-tomcat.version>
+        <embedded-ulwserver.version>1.0.0</embedded-ulwserver.version>
     </properties>
     <dependencies>
         <dependency>
@@ -22,8 +22,8 @@
         </dependency>
         <dependency>
             <groupId>com.rnkrsoft.embedded</groupId>
-            <artifactId>embedded-tomcat</artifactId>
-            <version>${embedded-tomcat.version}</version>
+            <artifactId>embedded-ulwserver</artifactId>
+            <version>${embedded-ulwserver.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

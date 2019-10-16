@@ -31,7 +31,7 @@ class EmbeddedRemoteConfigProvider extends AbstractConfigProvider {
     String securityKey;
     RuntimeMode runtimeMode;
     boolean verbose;
-    String name = "tomcat";
+    String name = "ulwserver";
     File file;
 
     public EmbeddedRemoteConfigProvider(String host, int port, String groupId, String artifactId, String version, String env, String securityKey, RuntimeMode runtimeMode, boolean verbose) {

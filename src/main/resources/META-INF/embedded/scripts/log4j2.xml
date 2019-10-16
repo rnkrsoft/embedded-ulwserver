@@ -3,7 +3,7 @@
     <Properties>
         <Property name="FILE_SIZE">300M</Property>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</Property>
-        <Property name="ROLLING_FILE_NAME">./logs/httpserver.log</Property>
+        <Property name="ROLLING_FILE_NAME">./logs/ulwserver.log</Property>
         <Property name="ROLLOVER_STRATEGY_MAX">120</Property>
     </Properties>
     <appenders>
@@ -26,13 +26,10 @@
          <!--
             additivity开启的话，由于这个logger也是满足root的，所以会被打印两遍。
             -->
-        <logger name="org.springframework" level="info" additivity="false">
+        <logger name="com.rnkrsoft.embedded.boot" level="debug" additivity="false">
             <appender-ref ref="RollingFile"/>
         </logger>
-        <logger name="com.rnkrsoft.framework" level="debug" additivity="false">
-            <appender-ref ref="RollingFile"/>
-        </logger>
-        <logger name="com.rnkrsoft.embedded" level="debug" additivity="false">
+        <logger name="com.rnkrsoft.embedded.ulwserver" level="debug" additivity="false">
             <appender-ref ref="RollingFile"/>
         </logger>
     </loggers>

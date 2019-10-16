@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <groupId>com.rnkrsoft.embedded</groupId>
-    <artifactId>embedded-httpserver</artifactId>
+    <artifactId>embedded-ulwserver</artifactId>
     <version>1.0.1-SNAPSHOT</version>
-    <name>embedded http server</name>
-    <description>rnkrsoft embedded container</description>
+    <name>Embedded Ultra Lightweight Server</name>
+    <description>嵌入式超轻量HTTP容器,构建出以最少的代码，内存满足开发生产需要</description>
     <properties>
         <maven.compiler.target>1.6</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>

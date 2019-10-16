@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 class EmbeddedAnnotationConfigProvider extends AbstractConfigProvider implements Runnable {
     final Properties properties = new Properties();
-    String name = "HttpServer";
+    String name = "ulwserver";
     /**
      * 嵌入式注解应用
      */

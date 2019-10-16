@@ -3,7 +3,7 @@ package com.rnkrsoft.embedded.boot;
 import com.rnkrsoft.config.ConfigProvider;
 import com.rnkrsoft.embedded.boot.annotation.EmbeddedBootApplication;
 import com.rnkrsoft.embedded.boot.annotation.EmbeddedRemoteConfigure;
-import com.rnkrsoft.embedded.httpserver.HttpServerStartup;
+import com.rnkrsoft.embedded.ulwserver.HttpServerStartup;
 import com.rnkrsoft.framework.config.v1.RuntimeMode;
 import com.rnkrsoft.logtrace4j.ErrorContextFactory;
 import lombok.extern.slf4j.Slf4j;
