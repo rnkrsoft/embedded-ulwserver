@@ -127,6 +127,10 @@ public interface HttpConnection {
      */
     void close();
 
+    /**
+     * 回收连接，包括重置成员变量
+     */
+    void recycle();
 
     HttpProtocol getProtocol();
 

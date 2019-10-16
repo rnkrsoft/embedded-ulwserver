@@ -76,7 +76,7 @@ public class NioHttpConnectorTest implements UlwServer{
     }
 
     @Override
-    public UlwServer setting(String name, String value) {
+    public UlwServer parameter(String name, String value) {
         return null;
     }
 

@@ -55,8 +55,9 @@ public class ConnectionRegistry extends AbstractLifeCycle{
         if (connection == null) {
             connection = new EmbeddedHttpConnection(this, server);
             allConnections.add(connection);
+            idleConnections.add(connection);
         }
-        connection.requestState();
+        connection.idleState();
         return connection;
     }
 
@@ -87,6 +88,7 @@ public class ConnectionRegistry extends AbstractLifeCycle{
         }else{
 
         }
+        connection.recycle();
         connection.setState(HttpConnection.State.IDLE);
     }
 
@@ -101,6 +103,7 @@ public class ConnectionRegistry extends AbstractLifeCycle{
         }else{
 
         }
+        connection.setLastActiveTime(System.currentTimeMillis());
         connection.setState(HttpConnection.State.REQUEST);
     }
 

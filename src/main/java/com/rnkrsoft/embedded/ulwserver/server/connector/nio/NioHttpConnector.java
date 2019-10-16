@@ -36,6 +36,8 @@ public class NioHttpConnector extends AbstractHttpConnector{
      */
     Executor executor;
 
+    volatile int connectedClientSize = 0;
+
 
     public NioHttpConnector(UlwServer server, ConnectionRegistry connectionRegistry, int port, int backlog) {
         super(server, connectionRegistry, port, backlog);
@@ -63,19 +65,25 @@ public class NioHttpConnector extends AbstractHttpConnector{
     }
 
     void start0() throws IOException {
+        //将连接器设置成启动中
         this.status = LifeStatus.STARTING;
         this.serverSocketChannel = ServerSocketChannel.open();
         this.selector = Selector.open();
+        //监听设置成非阻塞
         this.serverSocketChannel.configureBlocking(false);
         this.listenerKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
         ServerSocket serverSocket = serverSocketChannel.socket();
+        //启动端口重用
+        serverSocket.setReuseAddress(true);
+        //绑定端口
         serverSocket.bind(new InetSocketAddress(port), backlog);
 
         this.executor = new ThreadPoolExecutor(0, 20, 30000, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>());
-        //启动分发线程
+        //启动多路复用器线程
         this.dispatcher = new Thread(null, new Dispatcher(), "http-nio-dispatcher", 0);
         this.dispatcher.start();
+        //将连接器设置为已启动
         this.status = LifeStatus.STARTED;
     }
 
@@ -108,25 +116,23 @@ public class NioHttpConnector extends AbstractHttpConnector{
                         SelectionKey key = it.next();
                         it.remove();
                         if (key.equals(listenerKey)) {//如果有新连接接入
-                            if (isStopping()) {
+                            //如果连接器停止中或者已停止
+                            if (isStopping() || isStopped()) {
                                 continue;
                             }
                             SocketChannel socketChannel = serverSocketChannel.accept();
                             if (socketChannel != null) {
+                                //开启Nagle算法，该算法是为了提高较慢的广域网传输效率，减小小分组的报文个数
                                 socketChannel.socket().setTcpNoDelay(true);
                                 //将接收到的客户端连接设置为非阻塞
                                 socketChannel.configureBlocking(false);
                                 SelectionKey newKey = socketChannel.register(selector, SelectionKey.OP_READ);
-                                //在这里创建连接对象
-                                HttpConnection httpConnection = connectionRegistry.getConnection();
-                                httpConnection.setSelectionKey(newKey);
-                                httpConnection.setChannel(socketChannel);
+                                //在这里创建连接对象,在套接字连接时创建新连接
+                                HttpConnection connection = connectionRegistry.getConnection();
+                                connection.setSelectionKey(newKey);
+                                connection.setChannel(socketChannel);
                                 //将连接对象绑定选择器
-                                newKey.attach(httpConnection);
-                                //设置连接对象为请求状态
-                                httpConnection.requestState();
-                            } else {
-                                continue;
+                                newKey.attach(connection);
                             }
                         } else {
                             //处理连接
@@ -135,21 +141,22 @@ public class NioHttpConnector extends AbstractHttpConnector{
                                 if (key.isReadable()) {
                                     SocketChannel socketChannel = (SocketChannel) key.channel();
                                     //获取绑定HTTP连接对象
-                                    HttpConnection httpConnection = (HttpConnection) key.attachment();
+                                    HttpConnection connection = (HttpConnection) key.attachment();
+                                    //将当前key设置取消关注事件
                                     key.cancel();
+                                    //将连接对象设置为请求处理状态
+                                    connection.requestState();
                                     //将连接绑定的套接字IO设置为阻塞
                                     socketChannel.configureBlocking(true);
-                                    //TODO 将连接从空闲连接移除
                                     //处理连接
-                                    handle(httpConnection);
+                                    handle(connection);
                                 }
                             } catch (CancelledKeyException e) {
-                                e.printStackTrace();
+                                ;
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                ;
                             }
                         }
-
                     }
                     selector.selectNow();
                 } catch (IOException e) {
@@ -190,12 +197,9 @@ public class NioHttpConnector extends AbstractHttpConnector{
         void handle(HttpConnection connection) {
             try {
                 ConsumerThread t = new ConsumerThread(connection);
-                if (UlwServer.DEBUG){
-                    log.debug("提交业务线程处理");
-                }
                 executor.execute(t);
             } catch (Exception e) {
-                log.error("Pre handleRequest Connection happens error!", e);
+                log.error("ConsumerThread happens error!", e);
                 connection.close();
             }
         }

@@ -1,7 +1,7 @@
 package com.rnkrsoft.embedded.ulwserver.server;
 
 import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
-import com.rnkrsoft.embedded.ulwserver.server.protocol.http11.Http11Protocol;
+import com.rnkrsoft.embedded.ulwserver.server.protocol.http.Http11Protocol;
 import com.rnkrsoft.io.buffer.ByteBuf;
 import junit.framework.Assert;
 import org.junit.Test;

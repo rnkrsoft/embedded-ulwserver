@@ -1,4 +1,4 @@
-package com.rnkrsoft.embedded.ulwserver.server.protocol.http11;
+package com.rnkrsoft.embedded.ulwserver.server.protocol.http;
 
 import com.rnkrsoft.embedded.ulwserver.HttpConnection;
 import com.rnkrsoft.embedded.ulwserver.HttpHandler;
@@ -115,6 +115,7 @@ public class Http11Protocol extends HttpProtocol {
                 connection.getResponseHeader().contentLength(contentLength);
             }
         }
+        connection.responseState();
         connection.getResponseHeader().write(rawOut);
         //将实际的内容长度保存在连接器上
         connection.getResponseHeader().contentLength(contentLength);

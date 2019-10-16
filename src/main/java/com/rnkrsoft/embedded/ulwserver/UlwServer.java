@@ -76,7 +76,7 @@ public interface UlwServer extends LifeCycle{
      * @param value
      * @return
      */
-    UlwServer setting(String name, String value);
+    UlwServer parameter(String name, String value);
     /**
      * 注册一个Servlet，并映射到URL上
      *

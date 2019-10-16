@@ -143,7 +143,7 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
 
 
     @Override
-    public UlwServer setting(String name, String value) {
+    public UlwServer parameter(String name, String value) {
         return null;
     }
 
@@ -161,25 +161,6 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
         }
         ServletRegistry.registerServlet(servletMetadata);
         return this;
-    }
-
-    /**
-     * 请求处理完成，将连接状态转换成应答状态
-     */
-    public void requestCompleted(HttpConnection conn) {
-        conn.responseState();
-    }
-
-    /**
-     * 应答处理完成，将连接状态转换为空闲状态
-     */
-    public void responseCompleted(HttpConnection conn) {
-        conn.idleState();
-    }
-
-    public void requestStarted(HttpConnection conn){
-        conn.setLastActiveTime(System.currentTimeMillis());
-        conn.requestState();
     }
 
     //-------------------------------------------------------以下为私有方法---------------------------------------------------

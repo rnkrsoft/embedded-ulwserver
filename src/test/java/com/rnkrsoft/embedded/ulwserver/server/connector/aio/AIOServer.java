@@ -51,6 +51,7 @@ public class AIOServer {
                 null,
                 new CompletionHandler<AsynchronousSocketChannel, Object>() {
                     public void completed(AsynchronousSocketChannel socketChannel, Object attachment) {
+                        System.out.println("startWithCompletionHandler.accept thread" + Thread.currentThread().getId());
                         server.accept(null, this);// 再此接收客户端连接
                         handleWithCompletionHandler(socketChannel);
                     }
@@ -65,11 +66,13 @@ public class AIOServer {
 
     public void handleWithCompletionHandler(final AsynchronousSocketChannel socketChannel) {
         try {
+            System.out.println("handleWithCompletionHandler thread" + Thread.currentThread().getId());
             final ByteBuffer buffer = ByteBuffer.allocate(4);
             final long timeout = 10L;
             socketChannel.read(buffer, timeout, TimeUnit.SECONDS, buffer, new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
+                    System.out.println("socketChannel.read thread" + Thread.currentThread().getId());
                     System.out.println("read:" + result);
                     if (result == -1) {
                         try {
@@ -79,12 +82,14 @@ public class AIOServer {
                         }
                         return;
                     }
+                    if (attachment == null){
+                        return;
+                    }
                     attachment.flip();
                     System.out.println("received message:" + Charset.forName("UTF-8").decode(buffer));
                     attachment.clear();
                     socketChannel.read(attachment, timeout, TimeUnit.SECONDS, null, this);
                 }
-
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
                     exc.printStackTrace();

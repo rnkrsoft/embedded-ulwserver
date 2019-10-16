@@ -31,7 +31,6 @@ public class EmbeddedHttpConnection implements HttpConnection {
     InputStream rawIn;
     OutputStream rawOut;
 
-
     @Getter
     @Setter
     NetworkChannel channel;
@@ -120,6 +119,19 @@ public class EmbeddedHttpConnection implements HttpConnection {
         IOUtils.closeQuietly(this.rawIn);
         IOUtils.closeQuietly(this.rawOut);
         IOUtils.closeQuietly(this.channel);
+    }
+
+    @Override
+    public void recycle() {
+        close = false;
+        method = null;
+        version = null;
+        requestHeader = null;
+        responseHeader = null;
+        uri = null;
+        servlet = null;
+        rawIn = null;
+        rawOut = null;
     }
 
     @Override

@@ -118,11 +118,11 @@ public class StaticResourceHandler extends AbstractHandler {
                 name += path + "/" + fileName;
             }
             if (UlwServer.DEBUG){
-                Benchmarks.beginNanoTime();
+                Benchmarks.begin();
             }
             URL url = this.getClass().getClassLoader().getResource(name);
             if (UlwServer.DEBUG){
-                Benchmarks.endNanoTime("查找文件耗时");
+                Benchmarks.end("查找文件耗时");
             }
             if (url == null) {
                 //不存在则返回
@@ -132,18 +132,18 @@ public class StaticResourceHandler extends AbstractHandler {
             is = url.openStream();
             int contentLength = is.available();
             if (UlwServer.DEBUG){
-                Benchmarks.beginNanoTime();
+                Benchmarks.begin();
             }
             protocol.writeResponseHeader(HttpServletResponse.SC_OK, contentLength);
             if (UlwServer.DEBUG){
-                Benchmarks.endNanoTime("输出应答头");
+                Benchmarks.end("输出应答头");
             }
             if (UlwServer.DEBUG){
-                Benchmarks.beginNanoTime();
+                Benchmarks.begin();
             }
             IOUtils.copy(is, rawOut);
             if (UlwServer.DEBUG){
-                Benchmarks.endNanoTime("文件内容写入输出流");
+                Benchmarks.end("文件内容写入输出流");
             }
             rawOut.flush();
             return true;
