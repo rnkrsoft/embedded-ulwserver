@@ -115,7 +115,7 @@ public class NioHttpConnector extends AbstractHttpConnector{
                     while (it.hasNext()) {
                         SelectionKey key = it.next();
                         it.remove();
-                        if (key.equals(listenerKey)) {//如果有新连接接入
+                        if (key.isAcceptable()) {//如果有新连接接入
                             //如果连接器停止中或者已停止
                             if (isStopping() || isStopped()) {
                                 continue;
