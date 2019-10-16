@@ -3,7 +3,7 @@ package com.rnkrsoft.embedded.ulwserver.server.handler;
 import com.rnkrsoft.embedded.ulwserver.HttpConnection;
 import com.rnkrsoft.embedded.ulwserver.HttpProtocol;
 import com.rnkrsoft.embedded.ulwserver.UlwServer;
-import com.rnkrsoft.embedded.ulwserver.server.EmbeddedHttpConnection;
+import com.rnkrsoft.embedded.ulwserver.server.connection.EmbeddedHttpConnection;
 import com.rnkrsoft.embedded.ulwserver.server.message.BodyMessageRender;
 import com.rnkrsoft.embedded.ulwserver.server.servlet.*;
 import lombok.extern.slf4j.Slf4j;
@@ -60,11 +60,11 @@ public class ServletHandler extends AbstractHandler {
         servletResponse.setRequest(servletRequest);
 
         //构建过滤链
-        List<Filter> systemFilters = connection.getSystemFilters();
-        List<Filter> userFilters = connection.getUserFilters();
-        List<Filter> allFilters = new ArrayList<Filter>(systemFilters.size() + userFilters.size());
-        allFilters.addAll(userFilters);
-        allFilters.addAll(systemFilters);
+//        List<Filter> systemFilters = server.getSystemFilters();
+//        List<Filter> userFilters = server.getUserFilters();
+        List<Filter> allFilters = new ArrayList<Filter>();
+//        allFilters.addAll(userFilters);
+//        allFilters.addAll(systemFilters);
         try {
             //将所有过滤器和业务servlet构建成过滤链
             EmbeddedFilterChain filterChain = new EmbeddedFilterChain(allFilters.listIterator(), new ExecuteServletCallback() {

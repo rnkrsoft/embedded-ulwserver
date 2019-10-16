@@ -7,7 +7,7 @@ import java.io.InputStream;
  * Created by rnkrsoft.com on 2019/10/12.
  * 剩余内容的输入流
  */
-abstract class LeftOverInputStream extends FilterInputStream {
+public abstract class LeftOverInputStream extends FilterInputStream {
     protected boolean closed = false;
     protected boolean eof = false;
     byte[] one = new byte[1];

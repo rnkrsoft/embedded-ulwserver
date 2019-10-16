@@ -1,11 +1,11 @@
 package com.rnkrsoft.embedded.ulwserver.server.handler;
 
 
-import com.rnkrsoft.embedded.ulwserver.Benchmarks;
+import com.rnkrsoft.embedded.ulwserver.server.Benchmarks;
 import com.rnkrsoft.embedded.ulwserver.HttpConnection;
 import com.rnkrsoft.embedded.ulwserver.HttpProtocol;
 import com.rnkrsoft.embedded.ulwserver.UlwServer;
-import com.rnkrsoft.embedded.ulwserver.server.HttpHeader;
+import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
 import com.rnkrsoft.embedded.ulwserver.server.io.IOUtils;
 import com.rnkrsoft.embedded.ulwserver.server.mime.MimeRegistry;
 import lombok.extern.slf4j.Slf4j;

@@ -48,7 +48,7 @@ public class Http11Protocol extends HttpProtocol {
         } else {
             contentLength = connection.getRequestHeader().getContentLength();
             if (contentLength == 0) {
-                connection.getServer().requestCompleted(connection);
+//                connection.idleState();
             }
         }
         connection.getRequestHeader().contentLength(contentLength);
@@ -69,6 +69,7 @@ public class Http11Protocol extends HttpProtocol {
                 return;
             }
         }
+        writeError(HttpServletResponse.SC_NOT_FOUND, "Bad request!");
     }
     public void writeResponseHeader(int code, int contentLength, List<String> setCookies) throws IOException {
         //向客户端写入头信息

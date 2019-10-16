@@ -3,7 +3,7 @@ package com.rnkrsoft.embedded.boot;
 import com.rnkrsoft.config.ConfigProvider;
 import com.rnkrsoft.embedded.boot.annotation.EmbeddedBootApplication;
 import com.rnkrsoft.embedded.boot.annotation.EmbeddedRemoteConfigure;
-import com.rnkrsoft.embedded.ulwserver.HttpServerStartup;
+import com.rnkrsoft.embedded.ulwserver.server.UlwServerStartup;
 import com.rnkrsoft.framework.config.v1.RuntimeMode;
 import com.rnkrsoft.logtrace4j.ErrorContextFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -148,7 +148,7 @@ public class EmbeddedApplicationLoader {
             return;
         }
         try {
-            HttpServerStartup.main(CONFIG);
+            UlwServerStartup.main(CONFIG);
         } catch (Exception e) {
             log.error("Embedded Tomcat startup happens error!", e);
         }

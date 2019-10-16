@@ -1,7 +1,7 @@
 package com.rnkrsoft.embedded.ulwserver;
 
 
-import com.rnkrsoft.embedded.ulwserver.server.HttpHeader;
+import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
 import com.rnkrsoft.io.buffer.ByteBuf;
 import lombok.extern.slf4j.Slf4j;
 

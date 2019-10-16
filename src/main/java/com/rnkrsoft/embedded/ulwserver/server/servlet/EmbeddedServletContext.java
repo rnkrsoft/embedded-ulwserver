@@ -1,6 +1,6 @@
 package com.rnkrsoft.embedded.ulwserver.server.servlet;
 
-import com.rnkrsoft.embedded.ulwserver.server.EmbeddedHttpConnection;
+import com.rnkrsoft.embedded.ulwserver.server.connection.EmbeddedHttpConnection;
 import com.rnkrsoft.embedded.ulwserver.server.mime.MimeRegistry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

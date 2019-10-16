@@ -1,7 +1,7 @@
 package com.rnkrsoft.embedded.ulwserver;
 
 import com.rnkrsoft.embedded.ulwserver.server.EmbeddedUlwServer;
-import com.rnkrsoft.embedded.ulwserver.server.HttpHeader;
+import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
 
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
@@ -9,13 +9,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.channels.NetworkChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.List;
 
 /**
  * Created by rnkrsoft.com on 2019/10/10.
- * 对HTTP连接的抽象封装
+ * 对HTTP连接的抽象封装,连接对象横跨整个请求处理的全过程
+ * 1.空闲状态
+ * 2.请求处理状态
+ * 3.应答处理状态
+ * IDLE->REQUEST->RESPONSE-IDLE如此循环
  */
 public interface HttpConnection {
     enum State {
@@ -57,14 +61,14 @@ public interface HttpConnection {
      *
      * @param channel 套接字对象
      */
-    void setChannel(SocketChannel channel);
+    void setChannel(NetworkChannel channel);
 
     /**
      * 获取绑定的套接字对象
      *
      * @return
      */
-    SocketChannel getChannel();
+    NetworkChannel getChannel();
 
     /**
      * 设置NIO选择键
@@ -128,11 +132,7 @@ public interface HttpConnection {
 
     void setProtocol(HttpProtocol protocol);
 
-    EmbeddedUlwServer getServer();
-
-    List<Filter> getSystemFilters();
-
-    List<Filter> getUserFilters();
+    UlwServer getServer();
 
     void setLastActiveTime(long lastActiveTime);
 

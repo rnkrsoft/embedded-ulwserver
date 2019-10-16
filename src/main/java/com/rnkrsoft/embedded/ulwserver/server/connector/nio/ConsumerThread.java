@@ -1,4 +1,4 @@
-package com.rnkrsoft.embedded.ulwserver.server;
+package com.rnkrsoft.embedded.ulwserver.server.connector.nio;
 
 import com.rnkrsoft.embedded.ulwserver.HttpConnection;
 import com.rnkrsoft.embedded.ulwserver.HttpProtocol;
@@ -11,12 +11,12 @@ import java.net.URISyntaxException;
  * Created by rnkrsoft.com on 2019/10/10.
  * 处理任务，主要完成HTTP协议的解析，属于业务线程
  */
-class HandleTask implements Runnable {
+class ConsumerThread implements Runnable {
     HttpConnection httpConnection;
 
     static final ThreadLocal<HttpProtocol> protocols = new ThreadLocal<HttpProtocol>();
 
-    public HandleTask(HttpConnection httpConnection) {
+    public ConsumerThread(HttpConnection httpConnection) {
         this.httpConnection = httpConnection;
     }
 

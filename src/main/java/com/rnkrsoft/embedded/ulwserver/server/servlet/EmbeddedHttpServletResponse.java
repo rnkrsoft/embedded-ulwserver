@@ -1,7 +1,7 @@
 package com.rnkrsoft.embedded.ulwserver.server.servlet;
 
-import com.rnkrsoft.embedded.ulwserver.server.EmbeddedHttpConnection;
-import com.rnkrsoft.embedded.ulwserver.server.HttpHeader;
+import com.rnkrsoft.embedded.ulwserver.server.connection.EmbeddedHttpConnection;
+import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
 import com.rnkrsoft.io.buffer.ByteBuf;
 import com.rnkrsoft.message.MessageFormatter;
 import com.rnkrsoft.utils.StringUtils;

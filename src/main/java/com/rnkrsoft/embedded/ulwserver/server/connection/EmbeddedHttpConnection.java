@@ -1,8 +1,11 @@
-package com.rnkrsoft.embedded.ulwserver.server;
+package com.rnkrsoft.embedded.ulwserver.server.connection;
 
 import com.rnkrsoft.embedded.ulwserver.HttpConnection;
 import com.rnkrsoft.embedded.ulwserver.HttpProtocol;
+import com.rnkrsoft.embedded.ulwserver.UlwServer;
+import com.rnkrsoft.embedded.ulwserver.server.EmbeddedUlwServer;
 import com.rnkrsoft.embedded.ulwserver.server.event.HandleFinishEvent;
+import com.rnkrsoft.embedded.ulwserver.server.header.HttpHeader;
 import com.rnkrsoft.embedded.ulwserver.server.io.IOUtils;
 import com.rnkrsoft.embedded.ulwserver.server.io.RawInputStream;
 import com.rnkrsoft.embedded.ulwserver.server.io.RawOutputStream;
@@ -14,6 +17,7 @@ import javax.servlet.Servlet;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.channels.NetworkChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.List;
@@ -30,7 +34,7 @@ public class EmbeddedHttpConnection implements HttpConnection {
 
     @Getter
     @Setter
-    SocketChannel channel;
+    NetworkChannel channel;
     @Getter
     @Setter
     SelectionKey selectionKey;
@@ -55,48 +59,45 @@ public class EmbeddedHttpConnection implements HttpConnection {
     @Getter
     @Setter
     HttpProtocol protocol;
+    UlwServer server;
     @Getter
-    EmbeddedUlwServer server;
+    ConnectionRegistry connectionRegistry;
     @Getter
     @Setter
     long lastActiveTime = System.currentTimeMillis();
+    @Getter
+    @Setter
     volatile State state;
 
     boolean close = false;
 
-    public EmbeddedHttpConnection(EmbeddedUlwServer server, SocketChannel channel, SelectionKey selectionKey) {
+    public EmbeddedHttpConnection(ConnectionRegistry connectionRegistry, UlwServer server) {
         this.server = server;
-        this.channel = channel;
-        this.selectionKey = selectionKey;
-    }
-
-    @Override
-    public State getState() {
-        return state;
+        this.connectionRegistry = connectionRegistry;
     }
 
     @Override
     public HttpConnection idleState() {
-        this.state = State.IDLE;
+        this.connectionRegistry.idleState(this);
         return this;
     }
 
     @Override
     public HttpConnection requestState() {
-        this.state = State.REQUEST;
+        this.connectionRegistry.requestState(this);
         return this;
     }
 
     @Override
     public HttpConnection responseState() {
-        this.state = State.RESPONSE;
+        this.connectionRegistry.responseState(this);
         return this;
     }
 
     @Override
     public InputStream getRawIn() throws IOException {
         if (rawIn == null) {
-            rawIn = new BufferedInputStream(new RawInputStream(channel));
+            rawIn = new BufferedInputStream(new RawInputStream(((SocketChannel)this.channel)));
         }
         return rawIn;
     }
@@ -104,7 +105,7 @@ public class EmbeddedHttpConnection implements HttpConnection {
     @Override
     public OutputStream getRawOut() throws IOException {
         if (rawOut == null) {
-            rawOut = new BufferedOutputStream(new RawOutputStream(channel));
+            rawOut = new BufferedOutputStream(new RawOutputStream(((SocketChannel)this.channel)));
         }
         return rawOut;
     }
@@ -122,13 +123,8 @@ public class EmbeddedHttpConnection implements HttpConnection {
     }
 
     @Override
-    public List<Filter> getSystemFilters() {
-        return this.server.getSystemFilters();
-    }
-
-    @Override
-    public List<Filter> getUserFilters() {
-        return this.server.getUserFilters();
+    public UlwServer getServer() {
+        return server;
     }
 
     @Override
@@ -138,7 +134,7 @@ public class EmbeddedHttpConnection implements HttpConnection {
 
     public String getRemoteAddress() {
         try {
-            InetSocketAddress address = (InetSocketAddress) this.channel.getRemoteAddress();
+            InetSocketAddress address = (InetSocketAddress) ((SocketChannel)this.channel).getRemoteAddress();
             return address.getAddress().getHostAddress();
         } catch (IOException e) {
             return null;
@@ -147,7 +143,7 @@ public class EmbeddedHttpConnection implements HttpConnection {
 
     public String getRemoteHost() {
         try {
-            InetSocketAddress address = (InetSocketAddress) this.channel.getRemoteAddress();
+            InetSocketAddress address = (InetSocketAddress)((SocketChannel)this.channel).getRemoteAddress();
             return address.getAddress().getHostName();
         } catch (IOException e) {
             return null;
@@ -156,7 +152,7 @@ public class EmbeddedHttpConnection implements HttpConnection {
 
     public int getRemotePort() {
         try {
-            InetSocketAddress address = (InetSocketAddress) this.channel.getRemoteAddress();
+            InetSocketAddress address = (InetSocketAddress)((SocketChannel)this.channel).getRemoteAddress();
             return address.getPort();
         } catch (IOException e) {
             return -1;

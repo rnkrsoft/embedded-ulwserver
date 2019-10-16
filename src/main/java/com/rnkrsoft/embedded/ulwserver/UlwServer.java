@@ -34,7 +34,7 @@ public interface UlwServer extends LifeCycle{
      * @throws IOException IO异常
      */
     UlwServer bind(InetSocketAddress socketAddress, int backlog) throws IOException;
-
+    HttpHandler[] getHandlers();
     /**
      * 启动容器
      *
@@ -55,6 +55,10 @@ public interface UlwServer extends LifeCycle{
     void await();
 
     /**
+     * 处理事件
+     */
+    void handleEvent();
+    /**
      * 获取配置
      * @return
      */
@@ -65,12 +69,6 @@ public interface UlwServer extends LifeCycle{
      * @return
      */
     List<String> getWelcomes();
-    /**
-     * 以WebXml对象设置容器
-     *
-     * @param webXml WebXml对象,内容格式参照Servlet规范中的Web.xml
-     */
-    UlwServer setting(WebXml webXml);
 
     /**
      * 设置容器运行参数

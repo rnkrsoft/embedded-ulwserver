@@ -1,10 +1,13 @@
-package com.rnkrsoft.embedded.ulwserver;
+package com.rnkrsoft.embedded.ulwserver.server;
+
+import com.rnkrsoft.embedded.ulwserver.LifeCycle;
+import com.rnkrsoft.embedded.ulwserver.LifeStatus;
 
 /**
  * Created by rnkrsoft.com on 2019/10/14.
  * 抽象的生命周期类
  */
-public abstract class AbstractLifeCycle implements LifeCycle{
+public abstract class AbstractLifeCycle implements LifeCycle {
     protected LifeStatus status = LifeStatus.STOPPED;
     @Override
     public boolean isRunning() {
