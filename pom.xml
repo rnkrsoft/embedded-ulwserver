@@ -6,7 +6,7 @@
     <packaging>jar</packaging>
     <groupId>com.rnkrsoft.embedded</groupId>
     <artifactId>embedded-ulwserver</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <name>Embedded Ultra Lightweight Server</name>
     <description>嵌入式超轻量HTTP容器,构建出以最少的代码，内存满足开发生产需要</description>
     <properties>
