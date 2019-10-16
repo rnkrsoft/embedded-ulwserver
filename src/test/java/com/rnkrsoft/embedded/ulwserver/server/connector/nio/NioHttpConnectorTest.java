@@ -3,6 +3,7 @@ package com.rnkrsoft.embedded.ulwserver.server.connector.nio;
 import com.rnkrsoft.config.ConfigProvider;
 import com.rnkrsoft.config.properties.PropertiesConfigProvider;
 import com.rnkrsoft.embedded.ulwserver.HttpHandler;
+import com.rnkrsoft.embedded.ulwserver.LifeStatus;
 import com.rnkrsoft.embedded.ulwserver.UlwServer;
 import com.rnkrsoft.embedded.ulwserver.server.connection.ConnectionRegistry;
 import com.rnkrsoft.embedded.ulwserver.server.event.Event;
@@ -27,7 +28,8 @@ public class NioHttpConnectorTest implements UlwServer{
     public void testStart() throws Exception {
         NioHttpConnector connector = new NioHttpConnector(this, new ConnectionRegistry(this), 80, 1024);
         connector.start();
-        Thread.sleep(60 * 1000);
+        Thread.sleep(20 * 1000);
+        connector.stop();
     }
 
     @Override
@@ -123,5 +125,10 @@ public class NioHttpConnectorTest implements UlwServer{
     @Override
     public boolean isFailed() {
         return false;
+    }
+
+    @Override
+    public void setStatus(LifeStatus status) {
+
     }
 }

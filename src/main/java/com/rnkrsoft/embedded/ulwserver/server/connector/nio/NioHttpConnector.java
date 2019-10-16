@@ -20,12 +20,17 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rnkrsoft.com on 2019/10/16.
+ * 基于NIO的HTTP连接器
  */
 @Slf4j
-public class NioHttpConnector extends AbstractHttpConnector{
+public class NioHttpConnector extends AbstractHttpConnector {
     ServerSocketChannel serverSocketChannel;
     Selector selector;
     SelectionKey listenerKey;
+    /**
+     * 演示关闭时间（秒）
+     */
+    int delaySec = 10;
     /**
      * 分发线程体
      */
@@ -44,14 +49,13 @@ public class NioHttpConnector extends AbstractHttpConnector{
     }
 
 
-
-
     @Override
     public void start() {
         try {
             start0();
         } catch (IOException e) {
-            e.printStackTrace();
+            setStatus(LifeStatus.FAILED);
+            log.error("start nio connector happens error!", e);
         }
     }
 
@@ -60,13 +64,20 @@ public class NioHttpConnector extends AbstractHttpConnector{
         try {
             stop0();
         } catch (IOException e) {
-            e.printStackTrace();
+            setStatus(LifeStatus.STOPPED);
+            log.error("stop nio connector happens error!", e);
         }
     }
 
     void start0() throws IOException {
+        if (UlwServer.DEBUG){
+            log.debug("begin to start nio connector...");
+        }
         //将连接器设置成启动中
-        this.status = LifeStatus.STARTING;
+        setStatus(LifeStatus.STARTING);
+        if (UlwServer.DEBUG){
+            log.debug("open listen port {} ...", port);
+        }
         this.serverSocketChannel = ServerSocketChannel.open();
         this.selector = Selector.open();
         //监听设置成非阻塞
@@ -82,14 +93,60 @@ public class NioHttpConnector extends AbstractHttpConnector{
         this.executor = new ThreadPoolExecutor(0, 20, 30000, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>());
         //启动多路复用器线程
         this.dispatcher = new Thread(null, new Dispatcher(), "http-nio-dispatcher", 0);
+        if (UlwServer.DEBUG){
+            log.debug("start dispatcher thread ...");
+        }
         this.dispatcher.start();
         //将连接器设置为已启动
-        this.status = LifeStatus.STARTED;
+        setStatus(LifeStatus.STARTED);
+        if (UlwServer.DEBUG){
+            log.debug("finish start nio connector...");
+        }
     }
 
     void stop0() throws IOException {
-        this.status = LifeStatus.STOPPING;
+        if (UlwServer.DEBUG){
+            log.debug("begin to stop nio connector...");
+        }
+        setStatus(LifeStatus.STOPPING);
+        if (UlwServer.DEBUG){
+            log.debug("close Server Socket Channel...");
+        }
         serverSocketChannel.close();
+        if (UlwServer.DEBUG){
+            log.debug("close all connections...");
+        }
+        connectionRegistry.stop();
+        selector.wakeup();
+        long latest = System.currentTimeMillis() + delaySec * 1000;
+        if (UlwServer.DEBUG){
+            log.debug("delay {} s to close connector...", delaySec);
+        }
+        while (System.currentTimeMillis() < latest) {
+            Thread.yield();
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+            }
+            if (isStopped()) {
+                break;
+            }
+        }
+        if (dispatcher != null) {
+            try {
+                if (UlwServer.DEBUG){
+                    log.debug("close dispatcher thread...");
+                }
+                dispatcher.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Nio Http Connector stop hasppens error ", e);
+            }
+        }
+        setStatus(LifeStatus.STOPPED);
+        if (UlwServer.DEBUG){
+            log.debug("finish stop nio connector......");
+        }
     }
 
 
@@ -139,6 +196,9 @@ public class NioHttpConnector extends AbstractHttpConnector{
                             try {
                                 //IO可读
                                 if (key.isReadable()) {
+                                    if (UlwServer.DEBUG){
+                                        log.debug("receive begin http request...");
+                                    }
                                     SocketChannel socketChannel = (SocketChannel) key.channel();
                                     //获取绑定HTTP连接对象
                                     HttpConnection connection = (HttpConnection) key.attachment();
@@ -150,6 +210,9 @@ public class NioHttpConnector extends AbstractHttpConnector{
                                     socketChannel.configureBlocking(true);
                                     //处理连接
                                     handle(connection);
+                                    if (UlwServer.DEBUG){
+                                        log.debug("receive end http request...");
+                                    }
                                 }
                             } catch (CancelledKeyException e) {
                                 ;
@@ -163,7 +226,6 @@ public class NioHttpConnector extends AbstractHttpConnector{
 
                 }
             }
-
             //当容器关闭时，关闭NIO
             try {
                 selector.close();
@@ -203,18 +265,18 @@ public class NioHttpConnector extends AbstractHttpConnector{
                 connection.close();
             }
         }
-
-        void register(HttpConnection connection) {
-            try {
-                SocketChannel socketChannel = (SocketChannel) connection.getChannel();
-                socketChannel.configureBlocking(false);
-                SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
-                key.attach(connection);
-                connection.setSelectionKey(key);
-                connection.setLastActiveTime(System.currentTimeMillis());
-            } catch (IOException e) {
-                connection.close();
-            }
-        }
+//
+//        void register(HttpConnection connection) {
+//            try {
+//                SocketChannel socketChannel = (SocketChannel) connection.getChannel();
+//                socketChannel.configureBlocking(false);
+//                SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
+//                key.attach(connection);
+//                connection.setSelectionKey(key);
+//                connection.setLastActiveTime(System.currentTimeMillis());
+//            } catch (IOException e) {
+//                connection.close();
+//            }
+//        }
     }
 }

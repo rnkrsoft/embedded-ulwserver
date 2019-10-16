@@ -53,6 +53,7 @@ public interface LifeCycle {
      */
     boolean isFailed();
 
+    void setStatus(LifeStatus status);
     /**
      * 监听器
      */

@@ -55,7 +55,7 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
         this.config = config;
         this.handlers = new HttpHandler[]{new StaticResourceHandler(this), new ServletHandler(this)};
         this.connectionRegistry = new ConnectionRegistry(this);
-
+        this.port = config.getInteger("server.http.port", 80);
         String hostName = config.getString("server.http.hostName", "localhost");
         String protocol = config.getString("server.http.protocol", "HTTP/1.1");
         String contextPath = config.getString("server.http.contextPath", "");
@@ -187,12 +187,31 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
             throw new IllegalStateException("server in wrong state");
         }
         this.connectors =  new HttpConnector[]{new NioHttpConnector(this, this.connectionRegistry, this.port, 1024)};
-        this.status = LifeStatus.STARTING;
+        if (UlwServer.DEBUG){
+            log.debug("start UlwServer... ");
+        }
+        setStatus(LifeStatus.STARTING);
+        if (UlwServer.DEBUG){
+            log.debug("start httpHandler... ");
+        }
         if (handlers != null) {
             for (int i = 0; i < handlers.length; i++) {
                 HttpHandler handler = handlers[i];
                 handler.start();
             }
+        }
+        if (UlwServer.DEBUG){
+            log.debug("finish start httpHandler... ");
+        }
+        if (UlwServer.DEBUG){
+            log.debug("start connectionRegistry... ");
+        }
+        this.connectionRegistry.start();
+        if (UlwServer.DEBUG){
+            log.debug("finish start connectionRegistry... ");
+        }
+        if (UlwServer.DEBUG){
+            log.debug("start httpConnector... ");
         }
         if (connectors != null){
             for (int i = 0; i < connectors.length; i++) {
@@ -200,15 +219,15 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
                 connector.start();
             }
         }
-        this.connectionRegistry.start();
-
-        log.info("start http dispatcher thread... ");
-        this.status = LifeStatus.STARTED;
+        setStatus(LifeStatus.STARTED);
+        if (UlwServer.DEBUG){
+            log.debug("finish start UlwServer... ");
+        }
     }
 
     @Override
     public void stop() {
-        status = LifeStatus.STOPPING;
+        setStatus(LifeStatus.STOPPING);
         if (handlers != null) {
             for (int i = 0; i < handlers.length; i++) {
                 HttpHandler handler = handlers[i];
@@ -216,7 +235,7 @@ public class EmbeddedUlwServer extends AbstractLifeCycle implements UlwServer {
             }
         }
         this.connectionRegistry.stop();
-        status = LifeStatus.STOPPED;
+        setStatus(LifeStatus.STOPPED);
     }
 
     @Override

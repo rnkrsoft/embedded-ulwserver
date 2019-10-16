@@ -8,7 +8,13 @@ import com.rnkrsoft.embedded.ulwserver.LifeStatus;
  * 抽象的生命周期类
  */
 public abstract class AbstractLifeCycle implements LifeCycle {
-    protected LifeStatus status = LifeStatus.STOPPED;
+    private LifeStatus status = LifeStatus.STOPPED;
+
+    @Override
+    public void setStatus(LifeStatus status) {
+        this.status = status;
+    }
+
     @Override
     public boolean isRunning() {
         return status == LifeStatus.STARTING || status == LifeStatus.STARTED;
