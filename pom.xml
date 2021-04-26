@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.7.21</slf4j.version>
         <disruptor.version>3.3.5</disruptor.version>
-        <commons-io.version>2.5</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-codec.version>1.9</commons-codec.version>
         <io4j.version>1.0.4-SNAPSHOT</io4j.version>
